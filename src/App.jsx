@@ -1,35 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// Shakespeare Motivational App - Show Surrounding Lines
 
-function App() {
-  const [count, setCount] = useState(0)
+// Import necessary dependencies
+import React, { useState, useEffect } from 'react';
+import { fetchShakespeareQuote } from './utils/fetchQuotes';
+import QuoteDisplay from './components/QuoteDisplay';
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+const ShakespeareApp = () => {
+    const [quote, setQuote] = useState({ previous: '', current: '', next: '' });
+    const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState(null);
+    const [userPrompt, setUserPrompt] = useState('');
 
-export default App
+    useEffect(() => {
+        getQuote();
+    }, []);
+
+    const getQuote = async () => {
+        setLoading(true);
+        setErrorMessage(null);
+
+        try {
+            const { previous, current, next } = await fetchShakespeareQuote(userPrompt, true); // Fetch with surrounding lines
+            setQuote({ previous, current, next });
+        } catch (error) {
+            setErrorMessage("Failed to fetch quote. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="app-container">
+            <h1>Shakespeare Says...</h1>
+            {loading && <p>Loading...</p>}
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
+            {!loading && !errorMessage && <QuoteDisplay quote={quote} />}
+            <input
+                type="text"
+                placeholder="Enter a theme or keyword (or leave blank for random)..."
+                value={userPrompt}
+                onChange={(e) => setUserPrompt(e.target.value)}
+            />
+            <button onClick={getQuote}>Find a Quote</button>
+        </div>
+    );
+};
+
+export default ShakespeareApp;
